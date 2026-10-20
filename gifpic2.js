@@ -37,7 +37,7 @@ const {
   escapeMarkdown,
 } = require("discord.js");
 
-const TOKEN = process.env.DISCORD_TOKEN?.trim().replace(/^["']|["']$/g, "");
+const TOKEN = process.env.DISCORD_TOKEN1?.trim().replace(/^["']|["']$/g, "");
 
 const PREFIX = "!";
 const DATA_FILE = path.join(__dirname, "data.json");
