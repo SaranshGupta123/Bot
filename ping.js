@@ -14,7 +14,7 @@ const client = new Client({
   partials: [Partials.Channel, Partials.Message],
 });
 
-const dbFile = "./channels.json";
+const dbFile = "./pingchannels.json";
 
 if (!fs.existsSync(dbFile)) {
   fs.writeFileSync(dbFile, "{}");
