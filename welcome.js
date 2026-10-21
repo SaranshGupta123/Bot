@@ -10,10 +10,6 @@ const {
 
 const fs = require("fs");
 
-// ========================================
-// DISCORD CLIENT
-// ========================================
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -23,18 +19,12 @@ const client = new Client({
   ],
 });
 
-// ========================================
-// DATABASE
-// ========================================
-
 const dbFile = "./channels.json";
 
-// Create database if it doesn't exist
 if (!fs.existsSync(dbFile)) {
   fs.writeFileSync(dbFile, "{}");
 }
 
-// Read database
 function getChannels() {
   try {
     return JSON.parse(fs.readFileSync(dbFile, "utf8"));
@@ -44,7 +34,6 @@ function getChannels() {
   }
 }
 
-// Save welcome channel
 function saveChannel(guildId, channelId) {
   const data = getChannels();
 
@@ -53,7 +42,6 @@ function saveChannel(guildId, channelId) {
   fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
 }
 
-// Disable welcome system
 function disableChannel(guildId) {
   const data = getChannels();
 
@@ -62,37 +50,31 @@ function disableChannel(guildId) {
   fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
 }
 
-// ========================================
-// BOT READY
-// ========================================
-
-client.once(Events.ClientReady, (client) => {
-  console.log(`✅ Logged in as ${client.user.tag}!`);
+client.once(Events.ClientReady, (c) => {
+  console.log(`🟢 Welcome bot logged in as ${c.user.tag}`);
 });
 
 // ========================================
-// COMMANDS
+// WELCOME COMMANDS
 // ========================================
 
 client.on(Events.MessageCreate, async (message) => {
-  // Ignore bots and DMs
   if (message.author.bot || !message.guild) return;
 
-  // ====================================
-  // !welcome #channel
-  // ====================================
-
-  if (message.content.startsWith("!welcome")) {
-    // Manage Server permission
+  // IMPORTANT:
+  // Only EXACT !welcome command
+  if (
+    message.content === "!welcome" ||
+    message.content.startsWith("!welcome ")
+  ) {
     if (
       !message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)
     ) {
       return message.reply(
-        "❌ You need the **Manage Server** permission to configure the welcome system.",
+        "❌ You need **Manage Server** permission to use `!welcome`.",
       );
     }
 
-    // Find mentioned channel
     const targetChannel = message.mentions.channels.first();
 
     if (!targetChannel) {
@@ -101,54 +83,42 @@ client.on(Events.MessageCreate, async (message) => {
       );
     }
 
-    // Save channel
     saveChannel(message.guild.id, targetChannel.id);
 
     return message.reply(
-      `✅ Welcome channel has been set to ${targetChannel}!`,
+      `✅ Welcome embed channel has been set to ${targetChannel}!`,
     );
   }
 
-  // ====================================
   // !disablewelcome
-  // ====================================
-
   if (message.content === "!disablewelcome") {
-    // Administrator permission
     if (
       !message.member.permissions.has(PermissionsBitField.Flags.Administrator)
     ) {
       return message.reply(
-        "❌ You need **Administrator** permission to disable the welcome system.",
+        "❌ You need **Administrator** permission to use `!disablewelcome`.",
       );
     }
 
     const data = getChannels();
 
-    // Check whether welcome is enabled
     if (!data[message.guild.id]) {
-      return message.reply("⚠️ Welcome messages are already disabled.");
+      return message.reply("⚠️ Welcome embeds are already disabled.");
     }
 
-    // Remove server from database
     disableChannel(message.guild.id);
 
-    return message.reply(
-      "✅ Welcome messages have been disabled for this server.",
-    );
+    return message.reply("✅ Welcome embeds have been disabled.");
   }
 
-  // ====================================
   // !welcomestatus
-  // ====================================
-
   if (message.content === "!welcomestatus") {
     const data = getChannels();
 
     const channelId = data[message.guild.id];
 
     if (!channelId) {
-      return message.reply("🔴 Welcome system is currently **disabled**.");
+      return message.reply("🔴 Welcome embed system is **disabled**.");
     }
 
     const channel = message.guild.channels.cache.get(channelId);
@@ -159,7 +129,9 @@ client.on(Events.MessageCreate, async (message) => {
       );
     }
 
-    return message.reply(`🟢 Welcome system is **enabled** in ${channel}.`);
+    return message.reply(
+      `🟢 Welcome embed system is **enabled** in ${channel}.`,
+    );
   }
 });
 
@@ -171,24 +143,16 @@ client.on(Events.GuildMemberAdd, async (member) => {
   try {
     const data = getChannels();
 
-    // Get configured channel for this server
     const channelId = data[member.guild.id];
 
-    // Welcome system disabled
     if (!channelId) return;
 
-    // Get channel
     const welcomeChannel = member.guild.channels.cache.get(channelId);
 
-    // Channel deleted or unavailable
     if (!welcomeChannel) {
       console.log(`⚠️ Welcome channel not found for ${member.guild.name}`);
       return;
     }
-
-    // ==================================
-    // CREATE WELCOME EMBED
-    // ==================================
 
     const welcomeEmbed = new EmbedBuilder()
       .setColor("#00FF00")
@@ -209,10 +173,6 @@ client.on(Events.GuildMemberAdd, async (member) => {
       })
       .setTimestamp();
 
-    // ==================================
-    // SEND WELCOME MESSAGE
-    // ==================================
-
     await welcomeChannel.send({
       content: `${member}`,
       embeds: [welcomeEmbed],
@@ -220,12 +180,8 @@ client.on(Events.GuildMemberAdd, async (member) => {
 
     console.log(`👋 Welcomed ${member.user.tag} in ${member.guild.name}`);
   } catch (error) {
-    console.error("❌ Error sending welcome message:", error);
+    console.error("❌ Error sending welcome embed:", error);
   }
 });
-
-// ========================================
-// LOGIN
-// ========================================
 
 client.login(process.env.DISCORD_TOKEN);
