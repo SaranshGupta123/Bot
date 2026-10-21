@@ -39,26 +39,51 @@ client.once(Events.ClientReady, (c) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot || !message.guild) return;
 
+  // =========================
+  // SET WELCOME CHANNEL
+  // =========================
   if (message.content.startsWith("!setwelcome")) {
-    // Check for admin permissions
     if (!message.member.permissions.has("Administrator")) {
       return message.reply(
-        "You need Administrator permissions to set the welcome channel.",
+        "❌ You need Administrator permissions to set the welcome channel.",
       );
     }
 
-    // Find the mentioned channel
     const targetChannel = message.mentions.channels.first();
+
     if (!targetChannel) {
       return message.reply(
-        "Please mention a channel! Usage: `!setwelcome #channel-name`",
+        "⚠️ Please mention a channel! Usage: `!setwelcome #channel-name`",
       );
     }
 
-    // Save the setting for this specific server
     saveChannel(message.guild.id, targetChannel.id);
+
+    return message.reply(`✅ Welcome channel set to ${targetChannel}.`);
+  }
+
+  // =========================
+  // DISABLE WELCOME PINGS
+  // =========================
+  if (message.content === "!disableping") {
+    if (!message.member.permissions.has("Administrator")) {
+      return message.reply(
+        "❌ You need Administrator permissions to disable welcome messages.",
+      );
+    }
+
+    const data = getChannels();
+
+    if (!data[message.guild.id]) {
+      return message.reply("⚠️ Welcome messages are already disabled.");
+    }
+
+    delete data[message.guild.id];
+
+    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
+
     return message.reply(
-      `Done! I will now ping new members in ${targetChannel}.`,
+      "✅ Welcome messages have been disabled for this server.",
     );
   }
 });
