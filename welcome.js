@@ -56,6 +56,27 @@ client.on("messageCreate", async (message) => {
       `✅ The welcome channel for this server has been set to ${targetChannel}!`,
     );
   }
+  if (message.content === "!disablewelcome") {
+    if (!message.member.permissions.has("Administrator")) {
+      return message.reply(
+        "You need Administrator permissions to disable the welcome system.",
+      );
+    }
+
+    const data = getChannels();
+
+    if (!data[message.guild.id]) {
+      return message.reply("⚠️ Welcome system is already disabled.");
+    }
+
+    delete data[message.guild.id];
+
+    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
+
+    return message.reply(
+      "✅ Welcome messages have been disabled for this server.",
+    );
+  }
 });
 
 // --- EVENT: WHEN A MEMBER JOINS ---
