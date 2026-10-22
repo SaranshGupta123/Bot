@@ -219,7 +219,7 @@ client.on("guildMemberRemove", async (member) => {
         },
         {
           name: "🌐 Server Website",
-          value: "[Click here for our Website](https://your-link-here.com)",
+          value: "[Click here for our Website](https://battamizdill.com/)",
           inline: false,
         },
       )
