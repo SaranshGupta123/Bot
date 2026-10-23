@@ -737,7 +737,6 @@ client.on(Events.GuildCreate, async (guild) => {
 /* ═════════════════════════════ COMMANDS ═════════════════════════════ */
 
 const COMMANDS = new Set([
-  "help",
   "setup",
   "roles",
   "addrole",
@@ -831,31 +830,7 @@ async function runCommand(cmd, args, message) {
   };
 
   switch (cmd) {
-    case "help": {
-      const p = PREFIX;
-      return replyEmbed(
-        new EmbedBuilder()
-          .setColor(COLOR.info)
-          .setTitle("🌧️ Server tag bot — commands")
-          .setDescription(
-            [
-              `\`${p}setup <roleId> [<roleId> …] #channel\` — role IDs to give (any number) + where to announce`,
-              `\`${p}addrole <roleId> …\` / \`${p}removerole <roleId> …\` — change the role list`,
-              `\`${p}setchannel #channel\` — change the announcement channel`,
-              `\`${p}roles\` — show the roles and whether I can manage them`,
-              `\`${p}autoremove on|off\` — take roles back when the tag is removed`,
-              `\`${p}status\` — settings, who invited me, counts`,
-              `\`${p}list\` — who wears the tag right now`,
-              `\`${p}history [n]\` — latest adopt/remove events`,
-              `\`${p}sync\` — re-check everyone right now`,
-              `\`${p}setinviter <userId>\` — record who invited me (if I couldn't detect it)`,
-              "",
-              `Example: \`${p}setup 123456789012345678 234567890123456789 #tag-log\``,
-              "Get a role ID: Developer Mode on → right-click the role → **Copy Role ID**. IDs never ping anyone (an @role does).",
-            ].join("\n"),
-          ),
-      );
-    }
+   
 
     case "setup": {
       const { roles, channel, unknown } = parseTargets(guild, args);
