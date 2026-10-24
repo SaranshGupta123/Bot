@@ -7,6 +7,10 @@ const {
   SlashCommandBuilder,
   REST,
   Routes,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  PermissionsBitField,
 } = require("discord.js");
 
 const client = new Client({
@@ -17,7 +21,10 @@ const client = new Client({
   ],
 });
 
-// --- COMMAND DATA ---
+// ============================================================
+// COMMAND DATA
+// ============================================================
+
 const commandCategories = {
   "🎵 Music": [
     {
@@ -57,6 +64,24 @@ const commandCategories = {
       name: "`!stickstart <message>`",
       value:
         "Attach a sticky message to the bottom of a channel.\n**Example:** `!stickstart Please read the rules!`",
+    },
+    {
+      name: "`!stickstop`",
+      value:
+        "Stop the active sticky message in the current channel.\n**Example:** `!stickstop`",
+    },
+  ],
+
+  "🧹 Moderation": [
+    {
+      name: "`!purge <amount>`",
+      value:
+        "Delete multiple messages from the current channel.\n**Example:** `!purge 10`\n\nRequires **Manage Messages** permission.",
+    },
+    {
+      name: "`!purge 99`",
+      value:
+        "Delete up to 99 messages at once.\n\nMessages older than Discord's bulk-delete limit are automatically ignored.",
     },
   ],
 
@@ -177,13 +202,36 @@ const commandCategories = {
   ],
 };
 
-// --- HELPER FUNCTION: BUILD EMBED ---
-function generateHelpEmbed(user, botAvatarURL) {
+// ============================================================
+// PAGINATION
+// ============================================================
+
+// Convert object into array
+const categories = Object.entries(commandCategories);
+
+// 2 categories per page
+const CATEGORIES_PER_PAGE = 2;
+
+const totalPages = Math.ceil(categories.length / CATEGORIES_PER_PAGE);
+
+// ============================================================
+// CREATE EMBED FOR PAGE
+// ============================================================
+
+function generateHelpEmbed(user, botAvatarURL, page) {
+  const startIndex = page * CATEGORIES_PER_PAGE;
+  const pageCategories = categories.slice(
+    startIndex,
+    startIndex + CATEGORIES_PER_PAGE,
+  );
+
   const embed = new EmbedBuilder()
     .setColor("#2b2d31")
     .setTitle("✨ Bot Command Dashboard")
     .setDescription(
-      "Welcome to the help center! Below is a categorized list of all available commands, how to use them, and examples.",
+      `Welcome to the help center!\n\n` +
+        `Browse through the pages below to see all available commands and examples.\n\n` +
+        `📄 **Page ${page + 1} of ${totalPages}**`,
     )
     .setThumbnail(botAvatarURL)
     .setFooter({
@@ -192,8 +240,7 @@ function generateHelpEmbed(user, botAvatarURL) {
     })
     .setTimestamp();
 
-  // Combine commands per category into 1 field each (7 fields total)
-  for (const [category, commands] of Object.entries(commandCategories)) {
+  for (const [category, commands] of pageCategories) {
     const categoryContent = commands
       .map((cmd) => `${cmd.name}\n${cmd.value}`)
       .join("\n\n");
@@ -208,52 +255,180 @@ function generateHelpEmbed(user, botAvatarURL) {
   return embed;
 }
 
-// --- REGISTER SLASH COMMAND ---
+// ============================================================
+// CREATE BUTTONS
+// ============================================================
+
+function generateButtons(page) {
+  const previousButton = new ButtonBuilder()
+    .setCustomId(`help_previous_${page}`)
+    .setLabel("Previous")
+    .setEmoji("◀️")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page === 0);
+
+  const pageButton = new ButtonBuilder()
+    .setCustomId("help_page")
+    .setLabel(`${page + 1} / ${totalPages}`)
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(true);
+
+  const nextButton = new ButtonBuilder()
+    .setCustomId(`help_next_${page}`)
+    .setLabel("Next")
+    .setEmoji("▶️")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page === totalPages - 1);
+
+  return new ActionRowBuilder().addComponents(
+    previousButton,
+    pageButton,
+    nextButton,
+  );
+}
+
+// ============================================================
+// SHOW HELP MENU
+// ============================================================
+
+async function sendHelp(interactionOrMessage, user) {
+  const embed = generateHelpEmbed(user, client.user.displayAvatarURL(), 0);
+
+  const buttons = generateButtons(0);
+
+  if (interactionOrMessage.isChatInputCommand?.()) {
+    await interactionOrMessage.reply({
+      embeds: [embed],
+      components: [buttons],
+    });
+  } else {
+    await interactionOrMessage.reply({
+      embeds: [embed],
+      components: [buttons],
+    });
+  }
+}
+
+// ============================================================
+// REGISTER SLASH COMMAND
+// ============================================================
+
 const helpCommand = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("Displays the help dashboard with all commands and examples");
+  .setDescription("Displays the paginated help dashboard with all commands");
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
+
+// ============================================================
+// READY
+// ============================================================
 
 client.once("clientReady", async () => {
   console.log(`🤖 Logged in as ${client.user.tag}!`);
 
   try {
-    console.log("Refreshing application (/) commands...");
+    console.log("🔄 Refreshing application commands...");
+
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID1), {
       body: [helpCommand.toJSON()],
     });
-    console.log("Successfully reloaded commands.");
+
+    console.log("✅ Successfully registered /help");
+    console.log(`📚 Help menu has ${totalPages} pages.`);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Failed to register commands:", error);
   }
 });
 
-// --- PREFIX COMMAND HANDLER ($help) ---
+// ============================================================
+// PREFIX COMMAND
+// ============================================================
+
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   const content = message.content.toLowerCase().trim();
+
   if (content === "$help") {
-    const helpEmbed = generateHelpEmbed(
-      message.author,
-      client.user.displayAvatarURL(),
-    );
-    await message.reply({ embeds: [helpEmbed] });
+    await sendHelp(message, message.author);
   }
 });
 
-// --- SLASH COMMAND HANDLER (/help) ---
+// ============================================================
+// SLASH COMMAND
+// ============================================================
+
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  // ----------------------------
+  // /help
+  // ----------------------------
 
-  if (interaction.commandName === "help") {
-    const helpEmbed = generateHelpEmbed(
-      interaction.user,
-      client.user.displayAvatarURL(),
-    );
-    await interaction.reply({ embeds: [helpEmbed] });
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "help") {
+      await sendHelp(interaction, interaction.user);
+    }
+
+    return;
   }
+
+  // ----------------------------
+  // HELP BUTTONS
+  // ----------------------------
+
+  if (!interaction.isButton()) return;
+
+  const customId = interaction.customId;
+
+  if (
+    !customId.startsWith("help_previous_") &&
+    !customId.startsWith("help_next_") &&
+    customId !== "help_page"
+  ) {
+    return;
+  }
+
+  // Make sure only the original requester can use buttons
+  const originalUserId = interaction.message.interaction?.user?.id;
+
+  if (originalUserId && interaction.user.id !== originalUserId) {
+    return interaction.reply({
+      content: "❌ You cannot control someone else's help menu.",
+      ephemeral: true,
+    });
+  }
+
+  let currentPage = 0;
+
+  if (customId.startsWith("help_previous_")) {
+    currentPage = parseInt(customId.replace("help_previous_", "")) - 1;
+  }
+
+  if (customId.startsWith("help_next_")) {
+    currentPage = parseInt(customId.replace("help_next_", "")) + 1;
+  }
+
+  if (currentPage < 0) currentPage = 0;
+
+  if (currentPage >= totalPages) {
+    currentPage = totalPages - 1;
+  }
+
+  const embed = generateHelpEmbed(
+    interaction.user,
+    client.user.displayAvatarURL(),
+    currentPage,
+  );
+
+  const buttons = generateButtons(currentPage);
+
+  await interaction.update({
+    embeds: [embed],
+    components: [buttons],
+  });
 });
 
-client.login(process.env.TOKEN);
+// ============================================================
+// LOGIN
+// ============================================================
+
+client.login(process.env.DISCORD_TOKEN);

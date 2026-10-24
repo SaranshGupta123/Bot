@@ -7,6 +7,9 @@ const {
   SlashCommandBuilder,
   REST,
   Routes,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 
 // =====================================================
@@ -81,6 +84,24 @@ const commandCategories = {
       name: "`!stickstart <message>`",
       value:
         "Attach a sticky message to the bottom of a channel.\n**Example:** `!stickstart Please read the rules!`",
+    },
+    {
+      name: "`!stickstop`",
+      value:
+        "Stop the active sticky message in the current channel.\n**Example:** `!stickstop`",
+    },
+  ],
+
+  "🧹 Moderation": [
+    {
+      name: "`!purge <amount>`",
+      value:
+        "Delete multiple messages from the current channel.\n**Example:** `!purge 10`\n\nRequires **Manage Messages** permission.",
+    },
+    {
+      name: "`!purge 99`",
+      value:
+        "Delete up to 99 messages at once.\n\nMessages older than Discord's bulk-delete limit are automatically ignored.",
     },
   ],
 
@@ -202,10 +223,28 @@ const commandCategories = {
 };
 
 // =====================================================
+// PAGINATION CONFIG
+// =====================================================
+
+// Number of categories displayed per page
+const CATEGORIES_PER_PAGE = 2;
+
+const categories = Object.entries(commandCategories);
+
+const TOTAL_PAGES = Math.ceil(categories.length / CATEGORIES_PER_PAGE);
+
+// =====================================================
 // BUILD HELP EMBED
 // =====================================================
 
-function generateHelpEmbed(user, botAvatarURL) {
+function generateHelpEmbed(user, botAvatarURL, page) {
+  const startIndex = page * CATEGORIES_PER_PAGE;
+
+  const pageCategories = categories.slice(
+    startIndex,
+    startIndex + CATEGORIES_PER_PAGE,
+  );
+
   const embed = new EmbedBuilder()
     .setColor("#2b2d31")
     .setTitle("✨ Bot Command Dashboard")
@@ -216,24 +255,19 @@ function generateHelpEmbed(user, botAvatarURL) {
     )
     .setThumbnail(botAvatarURL)
     .setFooter({
-      text: `Requested by ${user.tag}`,
+      text: `Requested by ${user.tag} • Page ${page + 1}/${TOTAL_PAGES}`,
       iconURL: user.displayAvatarURL({ dynamic: true }),
     })
     .setTimestamp();
 
-  for (const [category, commands] of Object.entries(commandCategories)) {
-    let categoryContent = commands
+  for (const [category, commands] of pageCategories) {
+    const categoryContent = commands
       .map((cmd) => `${cmd.name}\n${cmd.value}`)
       .join("\n\n");
 
-    // Discord embed field values cannot exceed 1024 characters.
-    if (categoryContent.length > 1024) {
-      categoryContent = categoryContent.substring(0, 1000) + "\n...";
-    }
-
     embed.addFields({
       name: category,
-      value: categoryContent,
+      value: categoryContent.slice(0, 1024),
       inline: false,
     });
   }
@@ -242,12 +276,63 @@ function generateHelpEmbed(user, botAvatarURL) {
 }
 
 // =====================================================
+// PAGINATION BUTTONS
+// =====================================================
+
+function generatePaginationButtons(page) {
+  const previousButton = new ButtonBuilder()
+    .setCustomId(`help_previous_${page}`)
+    .setLabel("Previous")
+    .setEmoji("◀️")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page === 0);
+
+  const pageButton = new ButtonBuilder()
+    .setCustomId("help_current_page")
+    .setLabel(`Page ${page + 1} / ${TOTAL_PAGES}`)
+    .setStyle(ButtonStyle.Primary)
+    .setDisabled(true);
+
+  const nextButton = new ButtonBuilder()
+    .setCustomId(`help_next_${page}`)
+    .setLabel("Next")
+    .setEmoji("▶️")
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(page === TOTAL_PAGES - 1);
+
+  return new ActionRowBuilder().addComponents(
+    previousButton,
+    pageButton,
+    nextButton,
+  );
+}
+
+// =====================================================
+// SEND HELP
+// =====================================================
+
+async function sendHelp(target, user) {
+  const page = 0;
+
+  const embed = generateHelpEmbed(user, client.user.displayAvatarURL(), page);
+
+  const buttons = generatePaginationButtons(page);
+
+  await target.reply({
+    embeds: [embed],
+    components: [buttons],
+  });
+}
+
+// =====================================================
 // SLASH COMMAND
 // =====================================================
 
 const helpCommand = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("Displays the help dashboard with all commands and examples");
+  .setDescription(
+    "Displays the paginated help dashboard with all commands and examples",
+  );
 
 // =====================================================
 // DISCORD REST API
@@ -271,6 +356,7 @@ client.once("clientReady", async () => {
     });
 
     console.log("✅ Successfully reloaded slash commands.");
+    console.log(`📚 Help dashboard contains ${TOTAL_PAGES} pages.`);
   } catch (error) {
     console.error("❌ Failed to register slash commands:");
     console.error(error);
@@ -278,7 +364,7 @@ client.once("clientReady", async () => {
 });
 
 // =====================================================
-// PREFIX COMMAND: $help
+// PREFIX COMMAND: !help
 // =====================================================
 
 client.on("messageCreate", async (message) => {
@@ -288,14 +374,7 @@ client.on("messageCreate", async (message) => {
 
   if (content === "!help") {
     try {
-      const helpEmbed = generateHelpEmbed(
-        message.author,
-        client.user.displayAvatarURL(),
-      );
-
-      await message.reply({
-        embeds: [helpEmbed],
-      });
+      await sendHelp(message, message.author);
     } catch (error) {
       console.error("❌ Error sending !help:", error);
     }
@@ -303,26 +382,81 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================================================
-// SLASH COMMAND: /help
+// INTERACTIONS
 // =====================================================
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  // ===================================================
+  // /help
+  // ===================================================
 
-  if (interaction.commandName === "help") {
-    try {
-      const helpEmbed = generateHelpEmbed(
-        interaction.user,
-        client.user.displayAvatarURL(),
-      );
-
-      await interaction.reply({
-        embeds: [helpEmbed],
-      });
-    } catch (error) {
-      console.error("❌ Error sending /help:", error);
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "help") {
+      try {
+        await sendHelp(interaction, interaction.user);
+      } catch (error) {
+        console.error("❌ Error sending /help:", error);
+      }
     }
+
+    return;
   }
+
+  // ===================================================
+  // HELP PAGINATION BUTTONS
+  // ===================================================
+
+  if (!interaction.isButton()) return;
+
+  if (
+    !interaction.customId.startsWith("help_previous_") &&
+    !interaction.customId.startsWith("help_next_")
+  ) {
+    return;
+  }
+
+  // Get original user who opened the help menu
+  const originalUserId = interaction.message.interaction?.user?.id;
+
+  // Prevent other users from controlling the menu
+  if (originalUserId && interaction.user.id !== originalUserId) {
+    return interaction.reply({
+      content: "❌ You cannot control someone else's help menu.",
+      ephemeral: true,
+    });
+  }
+
+  let currentPage = parseInt(interaction.customId.split("_").pop());
+
+  if (interaction.customId.startsWith("help_previous_")) {
+    currentPage--;
+  }
+
+  if (interaction.customId.startsWith("help_next_")) {
+    currentPage++;
+  }
+
+  // Keep page within valid range
+  if (currentPage < 0) {
+    currentPage = 0;
+  }
+
+  if (currentPage >= TOTAL_PAGES) {
+    currentPage = TOTAL_PAGES - 1;
+  }
+
+  const embed = generateHelpEmbed(
+    interaction.user,
+    client.user.displayAvatarURL(),
+    currentPage,
+  );
+
+  const buttons = generatePaginationButtons(currentPage);
+
+  await interaction.update({
+    embeds: [embed],
+    components: [buttons],
+  });
 });
 
 // =====================================================
