@@ -1,0 +1,232 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String             @id // Discord User Snowflake
+  username      String
+  discriminator String?
+  avatar        String?
+  accentColor   Int?
+  isBlacklisted Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  preferences   UserPreference?
+  playlists     Playlist[]
+  favorites     FavoriteTrack[]
+  history       ListeningHistory[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model UserPreference {
+  userId        String   @id
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultVolume Int      @default(100)
+  autoPlay      Boolean  @default(true)
+  notifications Boolean  @default(true)
+  preferredFilter String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("user_preferences")
+}
+
+model Guild {
+  id            String             @id // Discord Guild Snowflake
+  name          String
+  icon          String?
+  ownerId       String
+  isBlacklisted Boolean            @default(false)
+  joinedAt      DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  config        GuildConfig?
+  controlPanel  ControlPanel?
+  djRoles       DJRole[]
+  permissions   GuildPermission[]
+  queueState    QueuePersistence?
+  history       ListeningHistory[]
+  auditLogs     AuditLog[]
+
+  @@map("guilds")
+}
+
+model GuildConfig {
+  guildId           String   @id
+  guild             Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  prefix            String   @default("!")
+  defaultVolume     Int      @default(100)
+  djRoleId          String?
+  allowedChannelIds String[] @default([])
+  twentyFourSeven   Boolean  @default(false)
+  autoplay          Boolean  @default(false)
+  voteSkipEnabled   Boolean  @default(true)
+  voteSkipThreshold Int      @default(50) // Percentage of listeners
+  maxQueueSize      Int      @default(1000)
+  announcements     Boolean  @default(true)
+  noPrefix          Boolean  @default(true)
+  noPrefixUserIds   String[] @default([])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("guild_configs")
+}
+
+model ControlPanel {
+  guildId        String   @id
+  guild          Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  channelId      String
+  messageId      String
+  voiceChannelId String
+  lastActive     DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("control_panels")
+}
+
+model DJRole {
+  id        String   @id @default(cuid())
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  roleId    String
+  roleName  String
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, roleId])
+  @@map("dj_roles")
+}
+
+model GuildPermission {
+  id          String   @id @default(cuid())
+  guildId     String
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  roleId      String
+  commandName String
+  allowed     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([guildId, roleId, commandName])
+  @@map("guild_permissions")
+}
+
+model Playlist {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isPublic    Boolean         @default(false)
+  tracks      PlaylistTrack[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  title      String
+  author     String
+  duration   Int      // In milliseconds
+  uri        String
+  identifier String
+  artworkUrl String?
+  source     String
+  position   Int
+  addedAt    DateTime @default(now())
+
+  @@index([playlistId, position])
+  @@map("playlist_tracks")
+}
+
+model FavoriteTrack {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identifier String
+  title      String
+  author     String
+  duration   Int
+  uri        String
+  artworkUrl String?
+  source     String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, identifier])
+  @@index([userId])
+  @@map("favorite_tracks")
+}
+
+model ListeningHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guildId   String
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  title     String
+  author    String
+  duration  Int
+  uri       String
+  source    String
+  playedAt  DateTime @default(now())
+
+  @@index([userId, playedAt])
+  @@index([guildId, playedAt])
+  @@map("listening_history")
+}
+
+model QueuePersistence {
+  guildId        String   @id
+  guild          Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  voiceChannelId String
+  textChannelId  String
+  currentTrack   Json?
+  queueData      Json     // Serialized track array
+  position       Int      @default(0)
+  volume         Int      @default(100)
+  loopMode       String   @default("off")
+  autoplay       Boolean  @default(false)
+  updatedAt      DateTime @updatedAt
+
+  @@map("queue_persistence")
+}
+
+model LavalinkNode {
+  id         String   @id
+  host       String
+  port       Int
+  secure     Boolean  @default(false)
+  priority   Int      @default(1)
+  isOnline   Boolean  @default(true)
+  lastSeenAt DateTime @default(now())
+
+  @@map("lavalink_nodes")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  guildId   String?
+  guild     Guild?   @relation(fields: [guildId], references: [id], onDelete: SetNull)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([guildId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+

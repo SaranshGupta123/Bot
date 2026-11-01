@@ -1,0 +1,21 @@
+{
+  "name": "@rainfall/config",
+  "version": "1.0.0",
+  "description": "Validated configuration and environment management for Rainfall",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8",
+    "@rainfall/types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7"
+  }
+}
+

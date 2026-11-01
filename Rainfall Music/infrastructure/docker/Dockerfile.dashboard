@@ -1,0 +1,23 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/dashboard ./apps/dashboard
+
+RUN npm install
+RUN npm run build --workspace=@rainfall/types
+RUN npm run build --workspace=@rainfall/dashboard
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+EXPOSE 3000
+
+COPY --from=builder /app /app
+
+CMD ["npm", "run", "dashboard:start"]
+

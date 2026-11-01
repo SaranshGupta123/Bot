@@ -1,0 +1,46 @@
+{
+  "name": "rainfall-music-ecosystem",
+  "version": "1.0.0",
+  "description": "Next-generation distributed Discord music ecosystem with Lavalink v4, voice panels, and real-time dashboard",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"BOT,API,WEB\" -c \"blue,green,magenta\" \"npm run bot:dev\" \"npm run api:dev\" \"npm run dashboard:dev\"",
+    "dev:bot": "npm run bot:dev",
+    "dev:api": "npm run api:dev",
+    "dev:dashboard": "npm run dashboard:dev",
+    "build": "npm run build --workspace=@rainfall/types && npm run build --workspace=@rainfall/config && npm run build --workspace=@rainfall/database && npm run build --workspace=@rainfall/shared && npm run build --workspace=@rainfall/bot --if-present",
+    "deploy-commands": "npm run deploy-commands --workspace=@rainfall/bot",
+    "bot:dev": "npm run dev --workspace=@rainfall/bot",
+    "bot:build": "npm run build --workspace=@rainfall/bot",
+    "bot:start": "npm run start --workspace=@rainfall/bot",
+    "api:dev": "npm run dev --workspace=@rainfall/api",
+    "api:build": "npm run build --workspace=@rainfall/api",
+    "api:start": "npm run start --workspace=@rainfall/api",
+    "dashboard:dev": "npm run dev --workspace=@rainfall/dashboard",
+    "dashboard:build": "npm run build --workspace=@rainfall/dashboard",
+    "dashboard:start": "npm run start --workspace=@rainfall/dashboard",
+    "db:generate": "prisma generate --schema=packages/database/prisma/schema.prisma",
+    "db:push": "prisma db push --schema=packages/database/prisma/schema.prisma",
+    "start": "concurrently -n \"BOT,API,WEB\" -c \"blue,green,magenta\" \"npm run bot:start\" \"npm run api:start\" \"npm run dashboard:start\"",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "keywords": [
+    "discord-music-bot",
+    "lavalink",
+    "discordjs",
+    "nextjs",
+    "typescript"
+  ],
+  "author": "Rainfall Architecture Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "concurrently": "^10.0.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5"
+  }
+}

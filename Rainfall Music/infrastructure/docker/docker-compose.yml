@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  rainfall-postgres:
+    image: postgres:16-alpine
+    container_name: rainfall-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rainfall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rainfall_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rainfall_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rainfall -d rainfall_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rainfall-redis:
+    image: redis:7-alpine
+    container_name: rainfall-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rainfall-lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: rainfall-lavalink
+    restart: always
+    environment:
+      - _JAVA_OPTIONS=-Xmx2G
+    volumes:
+      - ../lavalink/application.yml:/opt/Lavalink/application.yml
+    ports:
+      - "2333:2333"
+    depends_on:
+      - rainfall-redis
+
+  rainfall-bot:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.bot
+    container_name: rainfall-bot
+    restart: always
+    env_file:
+      - ../../.env
+    depends_on:
+      rainfall-postgres:
+        condition: service_healthy
+      rainfall-redis:
+        condition: service_healthy
+      rainfall-lavalink:
+        condition: service_started
+
+  rainfall-api:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: rainfall-api
+    restart: always
+    env_file:
+      - ../../.env
+    ports:
+      - "4000:4000"
+    depends_on:
+      rainfall-postgres:
+        condition: service_healthy
+      rainfall-redis:
+        condition: service_healthy
+
+  rainfall-dashboard:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.dashboard
+    container_name: rainfall-dashboard
+    restart: always
+    env_file:
+      - ../../.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - rainfall-api
+
+volumes:
+  postgres_data:
+  redis_data:
+

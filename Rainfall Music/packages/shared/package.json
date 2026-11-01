@@ -1,0 +1,23 @@
+{
+  "name": "@rainfall/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities, logging, embeds, and redis management for Rainfall",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "winston": "^3.13.0",
+    "ioredis": "^5.4.1",
+    "discord.js": "^14.15.3",
+    "@rainfall/config": "*",
+    "@rainfall/types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7"
+  }
+}
+

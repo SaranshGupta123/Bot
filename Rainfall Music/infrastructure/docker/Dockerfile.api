@@ -1,0 +1,27 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+RUN npm install
+RUN npm run build --workspace=@rainfall/types
+RUN npm run build --workspace=@rainfall/config
+RUN npm run db:generate --workspace=@rainfall/database
+RUN npm run build --workspace=@rainfall/database
+RUN npm run build --workspace=@rainfall/shared
+RUN npm run build --workspace=@rainfall/api
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+EXPOSE 4000
+
+COPY --from=builder /app /app
+
+CMD ["npm", "run", "api:start"]
+
