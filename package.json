@@ -1,4 +1,14 @@
+
 {
+  "name": "minecraft-status-bot",
+  "version": "1.0.0",
+  "description": "Public Discord Minecraft Java and Bedrock Server Status Bot",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node minecraft.js",
+    "deploy": "node deploy-commands.js"
+  },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
     "discord.js": "^14.27.0",
