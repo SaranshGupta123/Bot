@@ -5,7 +5,7 @@
  *  RainFall • Server Tag Bot        (discord.js v14 — single file)
  * ═══════════════════════════════════════════════════════════════════
  *  • Member adopts the server tag  → gets your chosen role(s) + is pinged in your chosen channel
- *  • Member removes the tag        → pinged again (roles taken back — toggle with !autoremove)
+ *  • Member removes the tag        → pinged again (roles taken back — toggle with %autoremove)
  *  • Everything is stored in data.json: who invited the bot, who adopted / removed
  *    the tag (with time), plus your settings
  *  • On EVERY start / restart it re-checks all members, so nothing is missed while it was offline
@@ -15,7 +15,7 @@
  *    2. Put your token in the DISCORD_TOKEN env var (or paste it below)
  *    3. Dev Portal → your app → Bot → turn ON: SERVER MEMBERS INTENT + MESSAGE CONTENT INTENT
  *    4. node index.js
- *    5. In your server (as admin):   !setup <roleId> <roleId> <roleId> #channel
+ *    5. In your server (as admin):   %setup <roleId> <roleId> <roleId> #channel
  *       (role IDs: turn on Developer Mode → right-click a role → Copy Role ID)
  *
  *  Bot needs:  Manage Roles • View Channel • Send Messages • Embed Links • View Audit Log
@@ -39,7 +39,7 @@ const {
 
 const TOKEN = process.env.DISCORD_TOKEN1?.trim().replace(/^["']|["']$/g, "");
 
-const PREFIX = "!";
+const PREFIX = "%";
 const DATA_FILE = path.join(__dirname, "data.json");
 const SWEEP_EVERY_MINUTES = 5; // safety-net re-check of already-cached members (no extra API load). 0 = off
 const MAX_HISTORY = 1000; // adopt/remove log entries kept per server in data.json
@@ -51,7 +51,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers, // privileged: member/user updates + full member list
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent, // privileged: "!" commands
+    GatewayIntentBits.MessageContent, // privileged: "%" commands
   ],
   allowedMentions: { parse: [] }, // nothing pings unless we explicitly allow it
 });
@@ -132,7 +132,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const holderCount = (rec) =>
   Object.values(rec.members).filter((m) => m.hasTag).length;
 const isAdmin = (member) =>
-  member.permissions.has(PermissionFlagsBits.ManageGuild);
+  member.permissions.has(PermissionFlagsBits.Administrator);
 
 /** True when the user is currently DISPLAYING this server's tag. */
 function wearsTag(user, guildId) {
@@ -768,7 +768,14 @@ client.on(Events.MessageCreate, async (message) => {
     const member =
       message.member ??
       (await message.guild.members.fetch(message.author.id).catch(() => null));
-    if (!member || !isAdmin(member)) return; // admins (Manage Server) only — everyone else is ignored silently
+    if (!member || !isAdmin(member)) {
+      return message
+        .reply({
+          content: "❌ You need **Administrator** permission to use this command.",
+          allowedMentions: { parse: [], repliedUser: false },
+        })
+        .catch(() => {});
+    }
     await runCommand(cmd, args, message);
   } catch (err) {
     console.error("[command] error:", err);

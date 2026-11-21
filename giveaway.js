@@ -177,6 +177,7 @@ const {
   GatewayIntentBits,
   EmbedBuilder,
   AttachmentBuilder,
+  PermissionsBitField,
 } = require("discord.js");
 
 const ms = require("ms");
@@ -192,7 +193,7 @@ const client = new Client({
   ],
 });
 
-const PREFIX = "!";
+const PREFIX = "%";
 const GIVEAWAY_FILE = path.join(__dirname, "giveaways.json");
 
 // --- Helper Functions for File Storage ---
@@ -264,18 +265,26 @@ client.once("clientReady", () => {
 });
 
 client.on("messageCreate", async (message) => {
-  if (message.author.bot || !message.content.startsWith(PREFIX)) return;
+  if (message.author.bot || !message.guild || !message.content.startsWith(PREFIX)) return;
 
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   if (command === "giveaway") {
+    if (
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+      return message.reply(
+        "❌ You need **Administrator** permission to use `%giveaway`.",
+      );
+    }
+
     const time = args[0];
     const prize = args.slice(1).join(" ");
 
     if (!time || !prize) {
       return message.reply(
-        "**Usage:** `!giveaway <time> <prize>` (e.g., `!giveaway 5m Steam Key`)",
+        "**Usage:** `%giveaway <time> <prize>` (e.g., `%giveaway 5m Steam Key`)",
       );
     }
 

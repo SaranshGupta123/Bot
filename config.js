@@ -14,7 +14,7 @@ module.exports = {
     "http://lofi.stream.laut.fm/lofi",
   ],
 
-  prefix: "!",
+  prefix: "%",
   botStatus: "🎵 Müzik Çalıyor",
   embedColor: "#ff0000",
 

@@ -428,6 +428,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
+  // Check Administrator permission
+  if (
+    !interaction.guild ||
+    !interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)
+  ) {
+    await interaction.reply({
+      content: "❌ You need **Administrator** permission to use `/mcstatus`.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
   const subcommand = interaction.options.getSubcommand();
 
   // ====================================================

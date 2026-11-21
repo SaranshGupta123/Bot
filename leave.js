@@ -65,7 +65,8 @@ const commands = [
     name: "setup-leaves",
     description: "Set the channel where leave messages will be sent.",
     default_member_permissions:
-      PermissionsBitField.Flags.ManageGuild.toString(),
+      PermissionsBitField.Flags.Administrator.toString(),
+    dm_permission: false,
 
     options: [
       {
@@ -117,6 +118,19 @@ client.on("interactionCreate", async (interaction) => {
   // ---------------------------------------------------
 
   if (interaction.commandName === "setup-leaves") {
+    if (
+      !interaction.guild ||
+      !interaction.memberPermissions?.has(
+        PermissionsBitField.Flags.Administrator,
+      )
+    ) {
+      return interaction.reply({
+        content:
+          "❌ You need **Administrator** permission to use `/setup-leaves`.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
     try {
       const selectedChannel = interaction.options.getChannel("channel");
 

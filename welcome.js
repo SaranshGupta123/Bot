@@ -61,17 +61,16 @@ client.once(Events.ClientReady, (c) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot || !message.guild) return;
 
+  const trimmed = message.content.trim();
+
   // IMPORTANT:
-  // Only EXACT !welcome command
-  if (
-    message.content === "!welcome" ||
-    message.content.startsWith("!welcome ")
-  ) {
+  // Only EXACT %welcome command
+  if (trimmed === "%welcome" || trimmed.startsWith("%welcome ")) {
     if (
-      !message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
     ) {
       return message.reply(
-        "❌ You need **Manage Server** permission to use `!welcome`.",
+        "❌ You need **Administrator** permission to use `%welcome`.",
       );
     }
 
@@ -79,7 +78,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     if (!targetChannel) {
       return message.reply(
-        "⚠️ Please mention a channel.\n\nUsage: `!welcome #channel-name`",
+        "⚠️ Please mention a channel.\n\nUsage: `%welcome #channel-name`",
       );
     }
 
@@ -90,13 +89,13 @@ client.on(Events.MessageCreate, async (message) => {
     );
   }
 
-  // !disablewelcome
-  if (message.content === "!disablewelcome") {
+  // %disablewelcome
+  if (trimmed === "%disablewelcome") {
     if (
-      !message.member.permissions.has(PermissionsBitField.Flags.Administrator)
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
     ) {
       return message.reply(
-        "❌ You need **Administrator** permission to use `!disablewelcome`.",
+        "❌ You need **Administrator** permission to use `%disablewelcome`.",
       );
     }
 
@@ -111,8 +110,16 @@ client.on(Events.MessageCreate, async (message) => {
     return message.reply("✅ Welcome embeds have been disabled.");
   }
 
-  // !welcomestatus
-  if (message.content === "!welcomestatus") {
+  // %welcomestatus
+  if (trimmed === "%welcomestatus") {
+    if (
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+      return message.reply(
+        "❌ You need **Administrator** permission to use `%welcomestatus`.",
+      );
+    }
+
     const data = getChannels();
 
     const channelId = data[message.guild.id];

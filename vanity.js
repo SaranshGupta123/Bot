@@ -24,10 +24,10 @@ client.on("messageCreate", async (message) => {
   // Only work inside servers
   if (!message.guild) return;
 
-  // Accept both "vanity" and "!vanity"
+  // Accept both "vanity" and "%vanity"
   const command = message.content.trim().toLowerCase();
 
-  if (command !== "vanity" && command !== "!vanity") return;
+  if (command !== "vanity" && command !== "%vanity") return;
 
   try {
     // Get the server vanity information

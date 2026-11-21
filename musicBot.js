@@ -13,7 +13,7 @@ const fs = require("fs");
 const config = require("./config.js");
 
 // Set your prefix here
-const PREFIX = "!";
+const PREFIX = "%";
 
 // Load Whitelist Database
 let whitelist = {};

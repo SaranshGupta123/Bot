@@ -1,6 +1,12 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits, Partials, Events } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  Events,
+  PermissionsBitField,
+} = require("discord.js");
 
 const fs = require("fs");
 
@@ -56,11 +62,15 @@ client.once(Events.ClientReady, (c) => {
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot || !message.guild) return;
 
-  // !setwelcome
-  if (message.content.startsWith("!setwelcome")) {
-    if (!message.member.permissions.has("Administrator")) {
+  const trimmed = message.content.trim();
+
+  // %setwelcome
+  if (trimmed === "%setwelcome" || trimmed.startsWith("%setwelcome ")) {
+    if (
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
       return message.reply(
-        "❌ You need Administrator permissions to use `!setwelcome`.",
+        "❌ You need **Administrator** permission to use `%setwelcome`.",
       );
     }
 
@@ -68,7 +78,7 @@ client.on(Events.MessageCreate, async (message) => {
 
     if (!targetChannel) {
       return message.reply(
-        "⚠️ Please mention a channel.\nUsage: `!setwelcome #channel`",
+        "⚠️ Please mention a channel.\nUsage: `%setwelcome #channel`",
       );
     }
 
@@ -77,11 +87,13 @@ client.on(Events.MessageCreate, async (message) => {
     return message.reply(`✅ Welcome ping channel set to ${targetChannel}.`);
   }
 
-  // !disableping
-  if (message.content === "!disableping") {
-    if (!message.member.permissions.has("Administrator")) {
+  // %disableping
+  if (trimmed === "%disableping") {
+    if (
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
       return message.reply(
-        "❌ You need Administrator permissions to use `!disableping`.",
+        "❌ You need **Administrator** permission to use `%disableping`.",
       );
     }
 

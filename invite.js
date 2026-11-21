@@ -177,6 +177,9 @@ client.once("clientReady", async () => {
      {
        name: "invites",
        description: "Check invite statistics",
+       default_member_permissions:
+         PermissionsBitField.Flags.Administrator.toString(),
+       dm_permission: false,
 
        options: [
          // /invites user
@@ -425,30 +428,37 @@ client.on("interactionCreate", async interaction => {
         });
     }
 
+    if (
+        !interaction.member?.permissions.has(
+            PermissionsBitField.Flags.Administrator
+        )
+    ) {
+        return interaction.reply({
+            content:
+                "❌ You need **Administrator** permission to use `/invites`.",
+            ephemeral: true
+        });
+    }
+
     // ======================================
     // /invites reset
     // ======================================
 
-    const resetSubcommand =
+    const subcommand =
         interaction.options.getSubcommand(false);
 
-    if (resetSubcommand === "reset") {
+    if (subcommand === "reset") {
 
-        if (
-            !interaction.member.permissions.has(
-                PermissionsBitField.Flags.ManageGuild
-            )
-        ) {
+        const user =
+            interaction.options.getUser("member") ||
+            interaction.options.getUser("user");
 
+        if (!user) {
             return interaction.reply({
-                content:
-                    "❌ You need **Manage Server** permission to reset invites.",
+                content: "❌ Please specify a valid user to reset.",
                 ephemeral: true
             });
         }
-
-        const user =
-            interaction.options.getUser("user");
 
         resetServerInvites(
             guild.id,
@@ -465,10 +475,7 @@ client.on("interactionCreate", async interaction => {
     // /invites all
     // ======================================
 
-    const showAll =
-        interaction.options.getBoolean("all");
-
-    if (showAll) {
+    if (subcommand === "all") {
 
         const results =
             getAllServerInvites(guild.id);
@@ -520,10 +527,11 @@ client.on("interactionCreate", async interaction => {
     }
 
     // ======================================
-    // /invites @user
+    // /invites user
     // ======================================
 
     let user =
+        interaction.options.getUser("member") ||
         interaction.options.getUser("user");
 
     if (!user) {

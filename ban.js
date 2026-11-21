@@ -10,11 +10,12 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
   ],
 });
 
-const PREFIX = "!";
+const PREFIX = "%";
 
 client.once("clientReady", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
@@ -24,17 +25,19 @@ client.once("clientReady", () => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot || !message.guild) return;
 
-  if (!message.content.toLowerCase().startsWith(`${PREFIX}ban`)) {
+  const args = message.content.trim().split(/\s+/);
+  if (args[0].toLowerCase() !== `${PREFIX}ban`) {
     return;
   }
 
-  const args = message.content.trim().split(/\s+/);
   const userId = args[1];
 
-  // Check permission
-  if (!message.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
+  // Check Administrator permission
+  if (
+    !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+  ) {
     return message.reply(
-      "❌ You need the **Ban Members** permission to use this command.",
+      "❌ You need **Administrator** permission to use this command.",
     );
   }
 
@@ -43,7 +46,7 @@ client.on("messageCreate", async (message) => {
     return message.reply(
       "❌ Please provide a Discord User ID.\n\n" +
         "**Example:**\n" +
-        "`!ban 123456789012345678`",
+        "`%ban 123456789012345678`",
     );
   }
 

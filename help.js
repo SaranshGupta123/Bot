@@ -28,13 +28,13 @@ const client = new Client({
 const commandCategories = {
   "🎵 Music": [
     {
-      name: "`/lofi`",
+      name: "`%lofi`",
       value:
-        "Starts playing 24/7 Lofi music in your voice channel.\n**Example:** `/lofi`",
+        "Starts playing 24/7 Lofi music in your voice channel.\n**Example:** `%lofi`",
     },
     {
-      name: "`/stop`",
-      value: "Stops the music and disconnects the bot.\n**Example:** `/stop`",
+      name: "`%stop`",
+      value: "Stops the music and disconnects the bot.\n**Example:** `%stop`",
     },
   ],
 
@@ -45,129 +45,138 @@ const commandCategories = {
         "Create a beautiful embedded poll.\n**Example:** `/poll question:Best Game? option1:Valorant option2:Minecraft`",
     },
     {
-      name: "`!vanity`",
-      value: "Shows the server's custom vanity URL.\n**Example:** `!vanity`",
+      name: "`%vanity`",
+      value: "Shows the server's custom vanity URL.\n**Example:** `%vanity`",
     },
     {
-      name: "`!find <channel-name>`",
-      value: "Search for a channel by name.\n**Example:** `!find general`",
+      name: "`%find <channel-name>`",
+      value: "Search for a channel by name.\n**Example:** `%find general`",
+    },
+    {
+      name: "`%commands`",
+      value: "View the full list of commands across all bots.\n**Example:** `%commands`",
     },
   ],
 
   "🎉 Community & Giveaways": [
     {
-      name: "`!giveaway <time> <prize>`",
+      name: "`%giveaway <time> <prize>`",
       value:
-        "Start a giveaway in the current channel.\n**Examples:**\n`!giveaway 10m Discord Nitro`\n`!giveaway 1h ₹500 Gift Card`\n`!giveaway 1d Steam Key`",
+        "Start a giveaway in the current channel.\n**Examples:**\n`%giveaway 10m Discord Nitro`\n`%giveaway 1h ₹500 Gift Card`\n`%giveaway 1d Steam Key`",
     },
     {
-      name: "`!stickstart <message>`",
+      name: "`%stickstart <message>`",
       value:
-        "Attach a sticky message to the bottom of a channel.\n**Example:** `!stickstart Please read the rules!`",
+        "Attach a sticky message to the bottom of a channel.\n**Example:** `%stickstart Please read the rules!`",
     },
     {
-      name: "`!stickstop`",
+      name: "`%stickstop`",
       value:
-        "Stop the active sticky message in the current channel.\n**Example:** `!stickstop`",
+        "Stop the active sticky message in the current channel.\n**Example:** `%stickstop`",
     },
   ],
 
   "🧹 Moderation": [
     {
-      name: "`!purge <amount>`",
+      name: "`%purge <amount>`",
       value:
-        "Delete multiple messages from the current channel.\n**Example:** `!purge 10`\n\nRequires **Manage Messages** permission.",
+        "Delete multiple messages from the current channel.\n**Example:** `%purge 10`\n\nRequires **Administrator** permission.",
     },
     {
-      name: "`!purge 99`",
+      name: "`%purge 99`",
       value:
         "Delete up to 99 messages at once.\n\nMessages older than Discord's bulk-delete limit are automatically ignored.",
+    },
+    {
+      name: "`%ban <userId>`",
+      value:
+        "Ban a user by Discord User ID.\n**Example:** `%ban 123456789012345678`\n\nRequires **Administrator** permission.",
     },
   ],
 
   "⚙️ Administration": [
     {
-      name: "`/setup`",
+      name: "`%setup <roleId...> #channel`",
       value:
-        "Setup the tag, roles, and message channel for this server.\n**Example:** `/setup tag:♡ role1:@Fan channel:#welcome`",
+        "Setup the tag roles and announcement channel for this server.\n**Example:** `%setup 123456789012345678 #tag-log`",
     },
     {
-      name: "`/grant`",
+      name: "`%grant @user`",
       value:
-        "Grant a user access to use the bot.\n**Example:** `/grant user:@Saransh`",
+        "Grant a user access to use the MusicBot.\n**Example:** `%grant @Saransh`",
     },
   ],
 
   "🛡️ Anti-Nuke Protection": [
     {
-      name: "`!antinuke setup #channel`",
+      name: "`%antinuke setup #channel`",
       value:
-        "Set the security logs channel.\n**Example:** `!antinuke setup #security-logs`",
+        "Set the security logs channel.\n**Example:** `%antinuke setup #security-logs`",
     },
     {
-      name: "`!antinuke whitelist add @user`",
+      name: "`%antinuke whitelist add @user`",
       value:
-        "Add a user to the anti-nuke whitelist.\n**Example:** `!antinuke whitelist add @User`",
+        "Add a user to the anti-nuke whitelist.\n**Example:** `%antinuke whitelist add @User`",
     },
     {
-      name: "`!antinuke whitelist remove @user`",
+      name: "`%antinuke whitelist remove @user`",
       value:
-        "Remove a user from the anti-nuke whitelist.\n**Example:** `!antinuke whitelist remove @User`",
+        "Remove a user from the anti-nuke whitelist.\n**Example:** `%antinuke whitelist remove @User`",
     },
     {
-      name: "`!antinuke whitelist addbots`",
+      name: "`%antinuke whitelist addbots`",
       value:
-        "Whitelist all bots in the server.\n**Example:** `!antinuke whitelist addbots`",
+        "Whitelist all bots in the server.\n**Example:** `%antinuke whitelist addbots`",
     },
     {
-      name: "`!antinuke whitelist removebots`",
+      name: "`%antinuke whitelist removebots`",
       value:
-        "Remove all bots from the anti-nuke whitelist.\n**Example:** `!antinuke whitelist removebots`",
+        "Remove all bots from the anti-nuke whitelist.\n**Example:** `%antinuke whitelist removebots`",
     },
     {
-      name: "`!antinuke dc @user`",
+      name: "`%antinuke dc @user`",
       value:
-        "Disconnect a user from voice chat.\n**Example:** `!antinuke dc @User`",
+        "Disconnect a user from voice chat.\n**Example:** `%antinuke dc @User`",
     },
     {
-      name: "`!antinuke t @user 10m`",
-      value: "Timeout a user.\n**Example:** `!antinuke t @User 10m`",
+      name: "`%antinuke t @user 10m`",
+      value: "Timeout a user.\n**Example:** `%antinuke t @User 10m`",
     },
     {
-      name: "`!antinuke b @user`",
-      value: "Ban a user.\n**Example:** `!antinuke b @User`",
+      name: "`%antinuke b @user`",
+      value: "Ban a user.\n**Example:** `%antinuke b @User`",
     },
     {
-      name: "`!antinuke k @user`",
-      value: "Kick a user.\n**Example:** `!antinuke k @User`",
+      name: "`%antinuke k @user`",
+      value: "Kick a user.\n**Example:** `%antinuke k @User`",
     },
   ],
 
   "👋 Welcome": [
     {
-      name: "`!welcome #channel`",
+      name: "`%welcome #channel`",
       value:
-        "Set the channel where welcome embeds will be sent.\n**Example:** `!welcome #welcome`",
+        "Set the channel where welcome embeds will be sent.\n**Example:** `%welcome #welcome`",
     },
     {
-      name: "`!disablewelcome`",
+      name: "`%disablewelcome`",
       value:
-        "Disable the welcome embed system for the server.\n**Example:** `!disablewelcome`",
+        "Disable the welcome embed system for the server.\n**Example:** `%disablewelcome`",
     },
     {
-      name: "`!welcomestatus`",
+      name: "`%welcomestatus`",
       value:
-        "Check whether the welcome embed system is enabled and which channel is configured.\n**Example:** `!welcomestatus`",
+        "Check whether the welcome embed system is enabled and which channel is configured.\n**Example:** `%welcomestatus`",
     },
     {
-      name: "`!setwelcome #channel`",
+      name: "`%setwelcome #channel`",
       value:
-        "Set the channel where new-member welcome pings will be sent.\n**Example:** `!setwelcome #welcome`",
+        "Set the channel where new-member welcome pings will be sent.\n**Example:** `%setwelcome #welcome`",
     },
     {
-      name: "`!disableping`",
+      name: "`%disableping`",
       value:
-        "Disable the new-member welcome ping system.\n**Example:** `!disableping`",
+        "Disable the new-member welcome ping system.\n**Example:** `%disableping`",
     },
   ],
 
@@ -186,13 +195,13 @@ const commandCategories = {
 
   "📢 Member Join": [
     {
-      name: "`!setwelcome #channel`",
+      name: "`%setwelcome #channel`",
       value:
-        "Configure the channel for temporary welcome pings when a new member joins.\n**Example:** `!setwelcome #welcome`",
+        "Configure the channel for temporary welcome pings when a new member joins.\n**Example:** `%setwelcome #welcome`",
     },
     {
-      name: "`!disableping`",
-      value: "Disable temporary welcome pings.\n**Example:** `!disableping`",
+      name: "`%disableping`",
+      value: "Disable temporary welcome pings.\n**Example:** `%disableping`",
     },
     {
       name: "`👋 Automatic Welcome`",
@@ -315,7 +324,9 @@ async function sendHelp(interactionOrMessage, user) {
 
 const helpCommand = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("Displays the paginated help dashboard with all commands");
+  .setDescription("Displays the paginated help dashboard with all commands")
+  .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
+  .setDMPermission(false);
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
@@ -345,11 +356,19 @@ client.once("clientReady", async () => {
 // ============================================================
 
 client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+  if (message.author.bot || !message.guild) return;
 
   const content = message.content.toLowerCase().trim();
 
-  if (content === "$help") {
+  if (content === "%help") {
+    if (
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+    ) {
+      return message.reply(
+        "❌ You need **Administrator** permission to use `%help`.",
+      );
+    }
+
     await sendHelp(message, message.author);
   }
 });
@@ -365,6 +384,18 @@ client.on("interactionCreate", async (interaction) => {
 
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "help") {
+      if (
+        !interaction.guild ||
+        !interaction.memberPermissions?.has(
+          PermissionsBitField.Flags.Administrator,
+        )
+      ) {
+        return interaction.reply({
+          content: "❌ You need **Administrator** permission to use `/help`.",
+          ephemeral: true,
+        });
+      }
+
       await sendHelp(interaction, interaction.user);
     }
 
@@ -385,6 +416,16 @@ client.on("interactionCreate", async (interaction) => {
     customId !== "help_page"
   ) {
     return;
+  }
+
+  if (
+    !interaction.guild ||
+    !interaction.memberPermissions?.has(PermissionsBitField.Flags.Administrator)
+  ) {
+    return interaction.reply({
+      content: "❌ You need **Administrator** permission to use this menu.",
+      ephemeral: true,
+    });
   }
 
   // Make sure only the original requester can use buttons

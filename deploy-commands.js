@@ -88,7 +88,8 @@ const commands = [
         .setName("disable")
         .setDescription("Disable the Minecraft status panel"),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDMPermission(false)
 
     .toJSON(),
 ];

@@ -29,15 +29,26 @@ client.on("messageCreate", async (message) => {
   // Only work inside servers
   if (!message.guild) return;
 
-  // Command must start with !find
-  if (!message.content.toLowerCase().startsWith("!find")) return;
+  // Command must be %find
+  const trimmed = message.content.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower !== "%find" && !lower.startsWith("%find ")) return;
 
-  // Get everything after !find
-  const input = message.content.slice(5).trim();
+  // Check Administrator permission
+  if (
+    !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
+  ) {
+    return message.reply(
+      "❌ You need **Administrator** permission to use `%find`."
+    );
+  }
+
+  // Get everything after %find
+  const input = trimmed.slice(5).trim();
 
   if (!input) {
     return message.reply(
-      "❌ Please specify a channel.\nExample: `!find #general`"
+      "❌ Please specify a channel.\nExample: `%find #general`"
     );
   }
 

@@ -15,7 +15,7 @@ const client = new Client({
   ],
 });
 
-const PREFIX = "!";
+const PREFIX = "%";
 
 client.on("clientReady", () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -23,25 +23,28 @@ client.on("clientReady", () => {
 });
 
 client.on("messageCreate", async (message) => {
-  // Ignore messages from bots or without the prefix
-  if (!message.content.startsWith(PREFIX) || message.author.bot) return;
+  // Ignore messages from bots, DMs, or without the prefix
+  if (!message.guild || !message.content.startsWith(PREFIX) || message.author.bot)
+    return;
 
   const args = message.content.slice(PREFIX.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   if (command === "purge") {
-    // Check if the user has permission
+    // Check if the user has Administrator permission
     if (
-      !message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)
+      !message.member?.permissions.has(PermissionsBitField.Flags.Administrator)
     ) {
-      return message.reply("You do not have permission to delete messages.");
+      return message.reply(
+        "❌ You need **Administrator** permission to use `%purge`.",
+      );
     }
 
     // Validate the amount
     const amount = parseInt(args[0]);
 
     if (isNaN(amount)) {
-      return message.reply("Please provide a valid number. Usage: `!purge 10`");
+      return message.reply("Please provide a valid number. Usage: `%purge 10`");
     }
 
     if (amount < 1 || amount > 99) {
@@ -49,7 +52,7 @@ client.on("messageCreate", async (message) => {
     }
 
     try {
-      // +1 to also delete the !purge command
+      // +1 to also delete the %purge command
       const deletedMessages = await message.channel.bulkDelete(
         amount + 1,
         true,

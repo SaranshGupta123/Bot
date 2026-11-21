@@ -519,6 +519,9 @@ client.on('interactionCreate', async (i) => {
   try {
     if (!i.guildId) return;
     if (i.isAutocomplete()) {
+      if (!i.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+        return i.respond([]);
+      }
       const typed = i.options.getFocused().toLowerCase();
       return i.respond(Object.values(getDb(i.guildId).panels)
         .filter((p) => p.title.toLowerCase().includes(typed)).slice(0, 25)

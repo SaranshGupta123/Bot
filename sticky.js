@@ -1,8 +1,13 @@
 require("dotenv").config();
 
-const { Client, GatewayIntentBits } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  PermissionsBitField,
+} = require("discord.js");
 const fs = require("fs");
 
+const PREFIX = "%";
 const DB_FILE = "./stickies.json";
 
 let stickies = {};
@@ -44,7 +49,7 @@ const client = new Client({
 client.once("clientReady", () => {
   console.log(`✅ Logged in as ${client.user.tag}!`);
   console.log("✅ Prefix commands active!");
-  console.log("👉 Use !stickstart and !stickstop");
+  console.log("👉 Use %stickstart and %stickstop");
 });
 
 // ===============================
@@ -59,21 +64,31 @@ client.on("messageCreate", async (message) => {
   // =========================================================
   // PREFIX COMMANDS
   // =========================================================
-  if (message.content.startsWith("!")) {
-    const args = message.content.slice(1).trim().split(/ +/);
+  if (message.guild && message.content.startsWith(PREFIX)) {
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
 
     const command = args.shift()?.toLowerCase();
 
     // =======================================================
-    // !stickstart
+    // %stickstart
     // =======================================================
     if (command === "stickstart") {
+      if (
+        !message.member?.permissions.has(
+          PermissionsBitField.Flags.Administrator,
+        )
+      ) {
+        return message.reply(
+          "❌ You need **Administrator** permission to use `%stickstart`.",
+        );
+      }
+
       let content = args.join(" ");
 
       if (!content) {
         return message.reply(
           "⚠️ Please provide a message to stick!\n" +
-            "Example: `!stickstart Read the rules!`",
+            "Example: `%stickstart Read the rules!`",
         );
       }
 
@@ -130,9 +145,19 @@ client.on("messageCreate", async (message) => {
     }
 
     // =======================================================
-    // !stickstop
+    // %stickstop
     // =======================================================
     if (command === "stickstop") {
+      if (
+        !message.member?.permissions.has(
+          PermissionsBitField.Flags.Administrator,
+        )
+      ) {
+        return message.reply(
+          "❌ You need **Administrator** permission to use `%stickstop`.",
+        );
+      }
+
       if (stickies[channelId]) {
         const lastId = stickies[channelId].lastMessageId;
 
